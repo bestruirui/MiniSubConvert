@@ -131,8 +131,5 @@ out
 *.sw?
 
 # Dist files
-backend/dist/*
-!backend/dist/.gitkeep
-backend/sub-store.min.js
-backend/src/core/proxy-utils/parsers/peggy/generated
-CHANGELOG.md
+**/dist
+substore/src/core/proxy-utils/parsers/peggy/generated

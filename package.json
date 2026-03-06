@@ -1,0 +1,37 @@
+{
+	"name": "minisubconvert",
+	"version": "1.0.0",
+	"description": "Subscription Convertion From Sub-Store",
+	"scripts": {
+		"sync": "node scripts/sync.js",
+		"build:node": "node scripts/build.js --node-only",
+		"build:parsers": "node scripts/build.js --parsers-only",
+		"node:dev": "nodemon -w src -w scripts -w package.json -w jsconfig.json --ext js,json --exec \"pnpm run build:node && node dist/minisubconvert.js\"",
+		"worker:dev": "wrangler dev --ip 0.0.0.0",
+		"worker:deploy": "pnpm run build:parsers && wrangler deploy",
+		"worker:secret": "wrangler secret  bulk .env.local",
+		"lint": "eslint \"{src,scripts}/**/*.js\" --ignore-pattern \"src/core/proxy-utils/**\""
+	},
+	"author": "bestrui",
+	"license": "GPL-3.0",
+	"dependencies": {
+		"ip-address": "^10.1.0",
+		"js-base64": "^3.7.8",
+		"json5": "^2.2.3",
+		"jsrsasign": "^11.1.0",
+		"lodash": "^4.17.23",
+		"yaml": "^2.8.2"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/node": "^25.3.5",
+		"esbuild": "^0.27.3",
+		"eslint": "^10.0.2",
+		"globals": "^17.4.0",
+		"jszip": "^3.10.1",
+		"nodemon": "^3.1.11",
+		"peggy": "^2.0.1",
+		"typescript": "^5.9.3",
+		"wrangler": "^4.71.0"
+	}
+}
