@@ -384,7 +384,7 @@ const socks5Parser = (proxy = {}) => {
             enabled: true,
             version:
                 !proxy['udp-over-tcp-version'] ||
-                    proxy['udp-over-tcp-version'] === 1
+                proxy['udp-over-tcp-version'] === 1
                     ? 1
                     : 2,
         };
@@ -411,7 +411,7 @@ const shadowTLSParser = (proxy = {}) => {
             enabled: true,
             version:
                 !proxy['udp-over-tcp-version'] ||
-                    proxy['udp-over-tcp-version'] === 1
+                proxy['udp-over-tcp-version'] === 1
                     ? 1
                     : 2,
         };
@@ -458,7 +458,7 @@ const ssParser = (proxy = {}) => {
             enabled: true,
             version:
                 !proxy['udp-over-tcp-version'] ||
-                    proxy['udp-over-tcp-version'] === 1
+                proxy['udp-over-tcp-version'] === 1
                     ? 1
                     : 2,
         };
@@ -657,7 +657,7 @@ const naiveParser = (proxy = {}) => {
             enabled: true,
             version:
                 !proxy['udp-over-tcp-version'] ||
-                    proxy['udp-over-tcp-version'] === 1
+                proxy['udp-over-tcp-version'] === 1
                     ? 1
                     : 2,
         };

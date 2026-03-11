@@ -597,7 +597,7 @@ function URI_VMess() {
                         transportHost = parsedHost;
                     }
                     // eslint-disable-next-line no-empty
-                } catch (e) { }
+                } catch (e) {}
                 let transportPath = params.path;
 
                 // 补上默认 path

@@ -152,9 +152,9 @@ function SSD() {
             let tag = server.remarks ? server.remarks : i;
             let plugin = server.plugin_options
                 ? '/?plugin=' +
-                encodeURIComponent(
-                    server.plugin + ';' + server.plugin_options,
-                )
+                  encodeURIComponent(
+                      server.plugin + ';' + server.plugin_options,
+                  )
                 : '';
             output[i] =
                 'ss://' +

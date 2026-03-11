@@ -271,11 +271,11 @@ export default function Shadowrocket_Producer() {
         return type === 'internal'
             ? list
             : 'proxies:\n' +
-            list
-                .map((proxy) => {
-                    return '  - ' + JSON.stringify(proxy) + '\n';
-                })
-                .join('');
+                  list
+                      .map((proxy) => {
+                          return '  - ' + JSON.stringify(proxy) + '\n';
+                      })
+                      .join('');
     };
     return { type, produce };
 }

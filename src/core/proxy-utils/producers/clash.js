@@ -214,9 +214,9 @@ export default function Clash_Producer() {
         return type === 'internal'
             ? list
             : 'proxies:\n' +
-            list
-                .map((proxy) => '  - ' + JSON.stringify(proxy) + '\n')
-                .join('');
+                  list
+                      .map((proxy) => '  - ' + JSON.stringify(proxy) + '\n')
+                      .join('');
     };
     return { type, produce };
 }

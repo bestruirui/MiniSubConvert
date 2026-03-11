@@ -126,12 +126,13 @@ function vless(proxy) {
         }
     }
 
-    return `vless://${proxy.uuid}@${proxy.server}:${proxy.port
-        }?security=${encodeURIComponent(
-            security,
-        )}${vlessTransport}${alpn}${allowInsecure}${pcs}${ech}${h2}${sni}${fp}${flow}${sid}${spx}${pbk}${mode}${extra}${pqv}${encryption}#${encodeURIComponent(
-            proxy.name,
-        )}`;
+    return `vless://${proxy.uuid}@${proxy.server}:${
+        proxy.port
+    }?security=${encodeURIComponent(
+        security,
+    )}${vlessTransport}${alpn}${allowInsecure}${pcs}${ech}${h2}${sni}${fp}${flow}${sid}${spx}${pbk}${mode}${extra}${pqv}${encryption}#${encodeURIComponent(
+        proxy.name,
+    )}`;
 }
 
 export default function URI_Producer() {
@@ -150,12 +151,10 @@ export default function URI_Producer() {
         }
         if (
             [
-                'trojan',
                 'tuic',
                 'hysteria',
                 'hysteria2',
                 'juicity',
-                'anytls',
                 'trusttunnel',
             ].includes(proxy.type)
         ) {
@@ -178,12 +177,13 @@ export default function URI_Producer() {
                 break;
             case 'ss':
                 const userinfo = `${proxy.cipher}:${proxy.password}`;
-                result = `ss://${proxy.cipher?.startsWith('2022-blake3-')
-                    ? `${encodeURIComponent(
-                        proxy.cipher,
-                    )}:${encodeURIComponent(proxy.password)}`
-                    : Base64.encode(userinfo)
-                    }@${proxy.server}:${proxy.port}${proxy.plugin ? '/' : ''}`;
+                result = `ss://${
+                    proxy.cipher?.startsWith('2022-blake3-')
+                        ? `${encodeURIComponent(
+                              proxy.cipher,
+                          )}:${encodeURIComponent(proxy.password)}`
+                        : Base64.encode(userinfo)
+                }@${proxy.server}:${proxy.port}${proxy.plugin ? '/' : ''}`;
                 let query = '';
                 if (proxy.plugin) {
                     query += '&plugin=';
@@ -191,14 +191,17 @@ export default function URI_Producer() {
                     switch (proxy.plugin) {
                         case 'obfs':
                             query += encodeURIComponent(
-                                `simple-obfs;obfs=${opts.mode}${opts.host ? ';obfs-host=' + opts.host : ''
+                                `simple-obfs;obfs=${opts.mode}${
+                                    opts.host ? ';obfs-host=' + opts.host : ''
                                 }`,
                             );
                             break;
                         case 'v2ray-plugin':
                             query += encodeURIComponent(
-                                `v2ray-plugin;obfs=${opts.mode}${opts.host ? ';obfs-host=' + opts.host : ''
-                                }${opts.host ? ';host=' + opts.host : ''}${opts.path ? ';path=' + opts.path : ''
+                                `v2ray-plugin;obfs=${opts.mode}${
+                                    opts.host ? ';obfs-host=' + opts.host : ''
+                                }${opts.host ? ';host=' + opts.host : ''}${
+                                    opts.path ? ';path=' + opts.path : ''
                                 }${opts.tls ? ';tls' : ''}`,
                             );
                             break;
@@ -232,7 +235,7 @@ export default function URI_Producer() {
                     if (['grpc'].includes(proxy.network)) {
                         let ssTransportServiceName =
                             proxy[`${proxy.network}-opts`]?.[
-                            `${proxy.network}-service-name`
+                                `${proxy.network}-service-name`
                             ];
                         let ssTransportAuthority =
                             proxy[`${proxy.network}-opts`]?.['_grpc-authority'];
@@ -248,7 +251,7 @@ export default function URI_Producer() {
                         }
                         ssTransport += `&mode=${encodeURIComponent(
                             proxy[`${proxy.network}-opts`]?.['_grpc-type'] ||
-                            'gun',
+                                'gun',
                         )}`;
                     }
                     let ssTransportPath = proxy[`${proxy.network}-opts`]?.path;
@@ -322,16 +325,19 @@ export default function URI_Producer() {
                 result += query.replace(/^&/, '?');
                 break;
             case 'ssr':
-                result = `${proxy.server}:${proxy.port}:${proxy.protocol}:${proxy.cipher
-                    }:${proxy.obfs}:${Base64.encode(proxy.password)}/`;
-                result += `?remarks=${Base64.encode(proxy.name)}${proxy['obfs-param']
-                    ? '&obfsparam=' + Base64.encode(proxy['obfs-param'])
-                    : ''
-                    }${proxy['protocol-param']
-                        ? '&protocolparam=' +
-                        Base64.encode(proxy['protocol-param'])
+                result = `${proxy.server}:${proxy.port}:${proxy.protocol}:${
+                    proxy.cipher
+                }:${proxy.obfs}:${Base64.encode(proxy.password)}/`;
+                result += `?remarks=${Base64.encode(proxy.name)}${
+                    proxy['obfs-param']
+                        ? '&obfsparam=' + Base64.encode(proxy['obfs-param'])
                         : ''
-                    }`;
+                }${
+                    proxy['protocol-param']
+                        ? '&protocolparam=' +
+                          Base64.encode(proxy['protocol-param'])
+                        : ''
+                }`;
                 result = 'ssr://' + Base64.encode(result);
                 break;
             case 'vmess':
@@ -376,7 +382,7 @@ export default function URI_Producer() {
                     if (['grpc'].includes(proxy.network)) {
                         result.path =
                             proxy[`${proxy.network}-opts`]?.[
-                            'grpc-service-name'
+                                'grpc-service-name'
                             ];
                         // https://github.com/XTLS/Xray-core/issues/91
                         result.type =
@@ -388,15 +394,15 @@ export default function URI_Producer() {
                         // https://github.com/XTLS/Xray-core/issues/91
                         result.type =
                             proxy[`${proxy.network}-opts`]?.[
-                            `_${proxy.network}-type`
+                                `_${proxy.network}-type`
                             ] || 'none';
                         result.host =
                             proxy[`${proxy.network}-opts`]?.[
-                            `_${proxy.network}-host`
+                                `_${proxy.network}-host`
                             ];
                         result.path =
                             proxy[`${proxy.network}-opts`]?.[
-                            `_${proxy.network}-path`
+                                `_${proxy.network}-path`
                             ];
                     } else {
                         if (vmessTransportPath) {
@@ -430,7 +436,7 @@ export default function URI_Producer() {
                     if (['grpc'].includes(proxy.network)) {
                         let trojanTransportServiceName =
                             proxy[`${proxy.network}-opts`]?.[
-                            `${proxy.network}-service-name`
+                                `${proxy.network}-service-name`
                             ];
                         let trojanTransportAuthority =
                             proxy[`${proxy.network}-opts`]?.['_grpc-authority'];
@@ -446,7 +452,7 @@ export default function URI_Producer() {
                         }
                         trojanTransport += `&mode=${encodeURIComponent(
                             proxy[`${proxy.network}-opts`]?.['_grpc-type'] ||
-                            'gun',
+                                'gun',
                         )}`;
                     }
                     let trojanTransportPath =
@@ -512,11 +518,13 @@ export default function URI_Producer() {
                         trojanMode = `&mode=${encodeURIComponent(proxy._mode)}`;
                     }
                 }
-                result = `trojan://${proxy.password}@${proxy.server}:${proxy.port
-                    }?sni=${encodeURIComponent(proxy.sni || proxy.server)}${proxy['skip-cert-verify'] ? '&allowInsecure=1' : ''
-                    }${trojanTransport}${trojanAlpn}${trojanFp}${trojanSecurity}${trojanSid}${trojanPbk}${trojanSpx}${trojanMode}${trojanExtra}#${encodeURIComponent(
-                        proxy.name,
-                    )}`;
+                result = `trojan://${proxy.password}@${proxy.server}:${
+                    proxy.port
+                }?sni=${encodeURIComponent(proxy.sni || proxy.server)}${
+                    proxy['skip-cert-verify'] ? '&allowInsecure=1' : ''
+                }${trojanTransport}${trojanAlpn}${trojanFp}${trojanSecurity}${trojanSid}${trojanPbk}${trojanSpx}${trojanMode}${trojanExtra}#${encodeURIComponent(
+                    proxy.name,
+                )}`;
                 break;
             case 'hysteria2':
                 let hysteria2params = [];
@@ -561,10 +569,11 @@ export default function URI_Producer() {
                 if (proxy.tfo) {
                     hysteria2params.push(`fastopen=1`);
                 }
-                result = `hysteria2://${encodeURIComponent(proxy.password)}@${proxy.server
-                    }:${proxy.port}?${hysteria2params.join(
-                        '&',
-                    )}#${encodeURIComponent(proxy.name)}`;
+                result = `hysteria2://${encodeURIComponent(proxy.password)}@${
+                    proxy.server
+                }:${proxy.port}?${hysteria2params.join(
+                    '&',
+                )}#${encodeURIComponent(proxy.name)}`;
                 break;
             case 'hysteria':
                 let hysteriaParams = [];
@@ -614,10 +623,11 @@ export default function URI_Producer() {
                     }
                 });
 
-                result = `hysteria://${proxy.server}:${proxy.port
-                    }?${hysteriaParams.join('&')}#${encodeURIComponent(
-                        proxy.name,
-                    )}`;
+                result = `hysteria://${proxy.server}:${
+                    proxy.port
+                }?${hysteriaParams.join('&')}#${encodeURIComponent(
+                    proxy.name,
+                )}`;
                 break;
 
             case 'tuic':
@@ -681,10 +691,11 @@ export default function URI_Producer() {
 
                     result = `tuic://${encodeURIComponent(
                         proxy.uuid,
-                    )}:${encodeURIComponent(proxy.password)}@${proxy.server}:${proxy.port
-                        }?${tuicParams.join('&')}#${encodeURIComponent(
-                            proxy.name,
-                        )}`;
+                    )}:${encodeURIComponent(proxy.password)}@${proxy.server}:${
+                        proxy.port
+                    }?${tuicParams.join('&')}#${encodeURIComponent(
+                        proxy.name,
+                    )}`;
                 }
                 break;
             case 'anytls':
