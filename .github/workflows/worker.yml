@@ -26,7 +26,7 @@ jobs:
         with:
           version: 10
           cache: true
-      - name: Deploy Worker
+      - name: Build And Deploy Worker
         run: |
           echo "SECRET=$SECRET" > .env.local
           pnpm install

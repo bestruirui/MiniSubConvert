@@ -25,10 +25,10 @@ jobs:
         with:
           version: 10
           cache: true
-      - name: Build
+      - name: Build Node Bundle
         run: |
           pnpm install
-          pnpm run build:node
+          pnpm run build
       - name: Generate Date Tag
         id: date
         run: echo "DATE_TAG=$(date +'%y%m%d')" >> $GITHUB_OUTPUT

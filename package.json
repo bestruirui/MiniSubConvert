@@ -4,11 +4,11 @@
 	"description": "Subscription Convertion From Sub-Store",
 	"scripts": {
 		"sync": "node scripts/sync.js",
-		"build:node": "node scripts/build.js --node-only",
+		"build": "node scripts/build.js",
 		"build:parsers": "node scripts/build.js --parsers-only",
-		"node:dev": "nodemon -w src -w scripts -w package.json -w jsconfig.json --ext js,json --exec \"pnpm run build:node && node dist/minisubconvert.js\"",
-		"worker:dev": "wrangler dev --ip 0.0.0.0",
-		"worker:deploy": "pnpm run build:parsers && wrangler deploy",
+		"node:dev": "nodemon -w src -w scripts -w package.json -w jsconfig.json --ext js,json --exec \"pnpm run build && node dist/minisubconvert.js\"",
+		"worker:dev": "pnpm run build:parsers && wrangler dev .build/src/worker.js --config wrangler.jsonc --tsconfig .build/jsconfig.json --ip 0.0.0.0",
+		"worker:deploy": "pnpm run build:parsers && wrangler deploy .build/src/worker.js --config wrangler.jsonc --tsconfig .build/jsconfig.json",
 		"worker:secret": "wrangler secret  bulk .env.local",
 		"lint": "eslint \"{src,scripts}/**/*.js\" --ignore-pattern \"src/core/proxy-utils/**\""
 	},

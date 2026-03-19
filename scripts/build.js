@@ -3,74 +3,141 @@ const peggy = require('peggy');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const ROOT_DIR = path.resolve(__dirname, '..');
-const SRC_DIR = path.join(ROOT_DIR, 'src');
-const PEGGY_DIR = path.join(SRC_DIR, 'core/proxy-utils/parsers/peggy');
-const GENERATED_DIR = path.join(PEGGY_DIR, 'generated');
-const NODE_ENTRY = path.join(SRC_DIR, 'node.js');
-const NODE_OUTPUT = path.join(ROOT_DIR, 'dist/minisubconvert.js');
+const CLI_FLAGS = new Set(process.argv.slice(2));
+const SHOULD_BUILD_BUNDLE = !CLI_FLAGS.has('--parsers-only');
+const PEGGY_IMPORT_SOURCE_RE =
+    /(from\s+['"])\.\/peggy\/(?!generated\/)([^'"]+)(['"])/g;
+const HELP_TEXT = `Usage: node scripts/build.js [--parsers-only]
 
-const args = new Set(process.argv.slice(2));
-if (args.has('--help')) {
-    console.log('Usage: node scripts/build.js [--parsers-only] [--node-only]');
+--parsers-only   Only generate pre-compiled Peggy parsers.
+Without --parsers-only, build the Node bundle from .build/src/node.js.`;
+
+if (CLI_FLAGS.has('--help')) {
+    console.log(HELP_TEXT);
     process.exit(0);
 }
 
-const shouldBuildParsers = !args.has('--node-only');
-const shouldBuildNode = !args.has('--parsers-only');
+const PATHS = createPaths();
 
-function ensureDir(dirPath) {
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-    }
+function createPaths() {
+    const rootDir = path.resolve(__dirname, '..');
+    const buildDir = path.join(rootDir, '.build');
+    const buildSrcDir = path.join(buildDir, 'src');
+    const buildParsersDir = path.join(buildSrcDir, 'core/proxy-utils/parsers');
+    const buildPeggyDir = path.join(buildParsersDir, 'peggy');
+
+    return {
+        rootDir,
+        srcDir: path.join(rootDir, 'src'),
+        rootTsconfigPath: path.join(rootDir, 'jsconfig.json'),
+        buildDir,
+        buildSrcDir,
+        buildTsconfigPath: path.join(buildDir, 'jsconfig.json'),
+        buildPeggyDir,
+        buildGeneratedDir: path.join(buildPeggyDir, 'generated'),
+        buildParsersIndexPath: path.join(buildParsersDir, 'index.js'),
+        nodeEntryPath: path.join(buildSrcDir, 'node.js'),
+        nodeOutputPath: path.join(rootDir, 'dist/minisubconvert.js'),
+    };
 }
 
-function compilePeggyParsers() {
-    ensureDir(GENERATED_DIR);
+function ensureDir(dirPath) {
+    fs.mkdirSync(dirPath, { recursive: true });
+}
 
-    const pegFiles = fs
-        .readdirSync(PEGGY_DIR)
+function prepareBuildWorkspace() {
+    fs.rmSync(PATHS.buildDir, { recursive: true, force: true });
+    ensureDir(PATHS.buildDir);
+    fs.cpSync(PATHS.srcDir, PATHS.buildSrcDir, { recursive: true });
+    fs.copyFileSync(PATHS.rootTsconfigPath, PATHS.buildTsconfigPath);
+}
+
+function getPeggyGrammarFiles() {
+    const grammarFiles = fs
+        .readdirSync(PATHS.buildPeggyDir)
         .filter((fileName) => fileName.endsWith('.peg'))
         .sort();
 
-    if (pegFiles.length === 0) {
-        throw new Error(`No .peg files found in ${PEGGY_DIR}`);
+    if (grammarFiles.length === 0) {
+        throw new Error(`No .peg files found in ${PATHS.buildPeggyDir}`);
     }
+
+    return grammarFiles;
+}
+
+function createParserModuleCode(pegFileName, parserSource) {
+    return [
+        `// Auto-generated from ${pegFileName} - DO NOT EDIT`,
+        parserSource,
+        '',
+        'let cachedParser = null;',
+        'export default function getParser() {',
+        '    if (!cachedParser) {',
+        '        cachedParser = peg$parse;',
+        '        cachedParser.parse = peg$parse;',
+        '    }',
+        '    return cachedParser;',
+        '}',
+        '',
+    ].join('\n');
+}
+
+function compilePeggyParser(pegFileName) {
+    const grammarPath = path.join(PATHS.buildPeggyDir, pegFileName);
+    const outputPath = path.join(
+        PATHS.buildGeneratedDir,
+        `${path.parse(pegFileName).name}.js`,
+    );
+    const parserSource = peggy.generate(fs.readFileSync(grammarPath, 'utf-8'), {
+        output: 'source',
+        format: 'es',
+    });
+
+    fs.writeFileSync(
+        outputPath,
+        createParserModuleCode(pegFileName, parserSource),
+        'utf-8',
+    );
+    console.log(`  Generated: ${path.relative(PATHS.rootDir, outputPath)}`);
+}
+
+function compilePeggyParsers() {
+    prepareBuildWorkspace();
+    ensureDir(PATHS.buildGeneratedDir);
+
+    const grammarFiles = getPeggyGrammarFiles();
 
     console.log('Pre-compiling Peggy grammars...');
 
-    for (const pegFile of pegFiles) {
-        const baseName = path.basename(pegFile, '.peg');
-        const pegPath = path.join(PEGGY_DIR, pegFile);
-        const outputPath = path.join(GENERATED_DIR, `${baseName}.js`);
-        const grammar = fs.readFileSync(pegPath, 'utf-8');
-        const parserSource = peggy.generate(grammar, {
-            output: 'source',
-            format: 'es',
-        });
-
-        const moduleCode = `// Auto-generated from ${pegFile} - DO NOT EDIT\n${parserSource}\n\nlet cachedParser = null;\nexport default function getParser() {\n    if (!cachedParser) {\n        cachedParser = peg$parse;\n        cachedParser.parse = peg$parse;\n    }\n    return cachedParser;\n}\n`;
-
-        fs.writeFileSync(outputPath, moduleCode, 'utf-8');
-        console.log(`  Generated: ${path.relative(ROOT_DIR, outputPath)}`);
+    for (const pegFileName of grammarFiles) {
+        compilePeggyParser(pegFileName);
     }
 
-    const peggyShimPath = path.join(GENERATED_DIR, 'peggy-shim.js');
-    fs.writeFileSync(
-        peggyShimPath,
-        `// Peggy shim - parsers are pre-compiled, no runtime generation needed\nexport function generate() {\n    throw new Error('Peggy runtime generation is disabled. Use pre-compiled parsers.');\n}\nexport default { generate };\n`,
-        'utf-8',
+    rewriteParserIndexImports();
+    console.log(`Generated ${grammarFiles.length} parser modules.`);
+}
+
+function rewriteParserIndexImports() {
+    const source = fs.readFileSync(PATHS.buildParsersIndexPath, 'utf-8');
+    const rewritten = source.replace(
+        PEGGY_IMPORT_SOURCE_RE,
+        '$1./peggy/generated/$2$3',
     );
 
-    console.log(`Generated ${pegFiles.length} parser modules.`);
+    if (rewritten !== source) {
+        fs.writeFileSync(PATHS.buildParsersIndexPath, rewritten, 'utf-8');
+        console.log(
+            `  Rewired: ${path.relative(PATHS.rootDir, PATHS.buildParsersIndexPath)}`,
+        );
+    }
 }
 
 async function buildNodeBundle() {
-    ensureDir(path.dirname(NODE_OUTPUT));
+    ensureDir(path.dirname(PATHS.nodeOutputPath));
 
     await esbuild.build({
-        entryPoints: [NODE_ENTRY],
-        outfile: NODE_OUTPUT,
+        entryPoints: [PATHS.nodeEntryPath],
+        outfile: PATHS.nodeOutputPath,
         bundle: true,
         minify: true,
         platform: 'node',
@@ -80,25 +147,20 @@ async function buildNodeBundle() {
         banner: {
             js: '#!/usr/bin/env node',
         },
-        tsconfig: path.join(ROOT_DIR, 'jsconfig.json'),
+        tsconfig: PATHS.buildTsconfigPath,
         logLevel: 'info',
     });
 
-    console.log(`Node bundle generated: ${path.relative(ROOT_DIR, NODE_OUTPUT)}`);
+    console.log(
+        `Node bundle generated: ${path.relative(PATHS.rootDir, PATHS.nodeOutputPath)}`,
+    );
 }
 
-(async () => {
+async function main() {
     try {
-        if (!shouldBuildParsers && !shouldBuildNode) {
-            console.log('Nothing to build.');
-            return;
-        }
+        compilePeggyParsers();
 
-        if (shouldBuildParsers) {
-            compilePeggyParsers();
-        }
-
-        if (shouldBuildNode) {
+        if (SHOULD_BUILD_BUNDLE) {
             await buildNodeBundle();
         }
 
@@ -107,4 +169,6 @@ async function buildNodeBundle() {
         console.error('Build failed:', error);
         process.exit(1);
     }
-})();
+}
+
+main();

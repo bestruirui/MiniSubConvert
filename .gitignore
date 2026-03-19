@@ -132,4 +132,5 @@ out
 
 # Dist files
 **/dist
-substore/src/core/proxy-utils/parsers/peggy/generated
+.build/
+src/core/proxy-utils/parsers/peggy/generated/
